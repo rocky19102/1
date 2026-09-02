@@ -3,10 +3,10 @@ name: Solv appointments nightly report
 on:
   workflow_dispatch:
   schedule:
-    # GitHub cron is UTC. Running at both 04:00 and 05:00 UTC plus the
-    # Pacific-time guard below keeps the report at 9 PM through DST changes.
+    # GitHub cron is UTC. Running at both 03:00 and 04:00 UTC plus the
+    # Pacific-time guard below keeps the report at 8 PM through DST changes.
+    - cron: "0 3 * * *"
     - cron: "0 4 * * *"
-    - cron: "0 5 * * *"
 
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Confirm 9 PM Pacific schedule
+      - name: Confirm 8 PM Pacific schedule
         id: timecheck
         shell: bash
         run: |
@@ -37,7 +37,7 @@ jobs:
           fi
 
           pacific_hour="$(TZ=America/Los_Angeles date +%H)"
-          if [ "$pacific_hour" = "21" ]; then
+          if [ "$pacific_hour" = "20" ]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_run=false" >> "$GITHUB_OUTPUT"
