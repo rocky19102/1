@@ -1,0 +1,67 @@
+name: Solv appointments nightly report
+
+on:
+  workflow_dispatch:
+  schedule:
+    # GitHub cron is UTC. Running at both 05:00 and 06:00 UTC plus the
+    # Pacific-time guard below keeps the report at 10 PM through DST changes.
+    - cron: "0 5 * * *"
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: solv-appointments-nightly
+  cancel-in-progress: false
+
+jobs:
+  run-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Confirm 10 PM Pacific schedule
+        id: timecheck
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          pacific_hour="$(TZ=America/Los_Angeles date +%H)"
+          if [ "$pacific_hour" = "22" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Solv report
+        if: steps.timecheck.outputs.should_run == 'true'
+        run: npm run report
+
+      - name: Commit updated report outputs
+        if: steps.timecheck.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add outputs/solv_appointments.csv \
+            outputs/solv_appointments.html \
+            outputs/solv_appointments.json \
+            outputs/solv_appointments_history.csv \
+            outputs/solv_appointments_history.html \
+            outputs/solv_appointments_history.json
+          if git diff --cached --quiet; then
+            echo "No report changes to commit."
+          else
+            git commit -m "Update Solv appointment report"
+            git push
+          fi
