@@ -4,7 +4,7 @@ This folder is ready to run as a GitHub Actions scheduled job. GitHub will run t
 
 ## What It Does
 
-- Runs the Solv appointment report every night at 10 PM Pacific time.
+- Runs the Solv appointment report every night at 9 PM Pacific time.
 - Saves the current report files in `outputs/`.
 - Updates the daily history files with one column per day.
 - Keeps the data in cloud storage by committing the updated files to the GitHub repository.
@@ -31,7 +31,7 @@ This folder is ready to run as a GitHub Actions scheduled job. GitHub will run t
 6. Open `Solv appointments nightly report`.
 7. Click `Run workflow` once to test it.
 
-After that, GitHub will run it every night at 10 PM Pacific.
+After that, GitHub will run it every night at 9 PM Pacific.
 
 ## Where Results Will Be
 

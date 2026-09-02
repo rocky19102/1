@@ -4,7 +4,7 @@ This workspace is ready to run as a GitHub Actions cloud scheduled job.
 
 ## What it does
 
-- Runs every night at 10 PM Pacific time.
+- Runs every night at 9 PM Pacific time.
 - Fetches the Solv search page.
 - Checks the tracked clinics.
 - Updates the current report files in `outputs/`.
