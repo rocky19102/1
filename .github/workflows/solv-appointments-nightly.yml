@@ -3,10 +3,10 @@ name: Solv appointments nightly report
 on:
   workflow_dispatch:
   schedule:
-    # GitHub cron is UTC. Running at both 03:00 and 04:00 UTC plus the
+    # GitHub cron is UTC. Running at both 03:17 and 04:17 UTC plus the
     # Pacific-time guard below keeps the report at 8 PM through DST changes.
-    - cron: "0 3 * * *"
-    - cron: "0 4 * * *"
+    - cron: "17 3 * * *"
+    - cron: "17 4 * * *"
 
 permissions:
   contents: write
