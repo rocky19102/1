@@ -3,8 +3,8 @@ name: Solv appointments nightly report
 on:
   workflow_dispatch:
   schedule:
-    # GitHub cron is UTC. Running at both 03:17 and 04:17 UTC plus the
-    # Pacific-time guard below keeps the report at 8 PM through DST changes.
+    # GitHub cron is UTC. 03:17 UTC is 8:17 PM Pacific during daylight time,
+    # and 04:17 UTC is 8:17 PM Pacific during standard time.
     - cron: "17 3 * * *"
     - cron: "17 4 * * *"
 
@@ -36,8 +36,12 @@ jobs:
             exit 0
           fi
 
-          pacific_hour="$(TZ=America/Los_Angeles date +%H)"
-          if [ "$pacific_hour" = "20" ]; then
+          scheduled_cron="${{ github.event.schedule }}"
+          pacific_offset="$(TZ=America/Los_Angeles date +%z)"
+
+          if [ "$scheduled_cron" = "17 3 * * *" ] && [ "$pacific_offset" = "-0700" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$scheduled_cron" = "17 4 * * *" ] && [ "$pacific_offset" = "-0800" ]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
           else
             echo "should_run=false" >> "$GITHUB_OUTPUT"

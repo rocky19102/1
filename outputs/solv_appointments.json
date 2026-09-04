@@ -1,45 +1,45 @@
 {
   "sourceUrl": "https://www.solvhealth.com/r/search?query=Feeling+sick&lat=46.244620082704216&lng=-119.2282971037977&bounds=%5B%5B-119.34884802266265%2C46.17857856490545%5D%2C%5B-119.10774618493296%2C46.31058219274047%5D%5D&locationSource=map-bounds&location=",
-  "generatedAt": "2026-09-03T07:52:34.781Z",
-  "generatedAtDisplay": "09/03/2026, 12:52:34 AM PDT",
+  "generatedAt": "2026-09-04T14:19:14.896Z",
+  "generatedAtDisplay": "09/04/2026, 7:19:14 AM PDT",
   "timeZone": "America/Los_Angeles",
-  "overallTotal": 103,
+  "overallTotal": 82,
   "clinics": [
     {
       "clinic": "Health First Urgent Care, Pasco",
-      "bookedAppointments": 31,
-      "runDateTime": "2026-09-03T07:52:34.781Z",
-      "runDateTimeDisplay": "09/03/2026, 12:52:34 AM PDT"
+      "bookedAppointments": 20,
+      "runDateTime": "2026-09-04T14:19:14.896Z",
+      "runDateTimeDisplay": "09/04/2026, 7:19:14 AM PDT"
     },
     {
       "clinic": "Health First Urgent Care, Richland",
-      "bookedAppointments": 14,
-      "runDateTime": "2026-09-03T07:52:34.781Z",
-      "runDateTimeDisplay": "09/03/2026, 12:52:34 AM PDT"
+      "bookedAppointments": 11,
+      "runDateTime": "2026-09-04T14:19:14.896Z",
+      "runDateTimeDisplay": "09/04/2026, 7:19:14 AM PDT"
     },
     {
       "clinic": "MultiCare Indigo Urgent Care, Richland",
-      "bookedAppointments": 17,
-      "runDateTime": "2026-09-03T07:52:34.781Z",
-      "runDateTimeDisplay": "09/03/2026, 12:52:34 AM PDT"
+      "bookedAppointments": 24,
+      "runDateTime": "2026-09-04T14:19:14.896Z",
+      "runDateTimeDisplay": "09/04/2026, 7:19:14 AM PDT"
     },
     {
       "clinic": "MultiCare Indigo Urgent Care, Kennewick",
-      "bookedAppointments": 17,
-      "runDateTime": "2026-09-03T07:52:34.781Z",
-      "runDateTimeDisplay": "09/03/2026, 12:52:34 AM PDT"
+      "bookedAppointments": 10,
+      "runDateTime": "2026-09-04T14:19:14.896Z",
+      "runDateTimeDisplay": "09/04/2026, 7:19:14 AM PDT"
     },
     {
       "clinic": "Bestmed Urgent Care, Richland George Washington Way",
-      "bookedAppointments": 8,
-      "runDateTime": "2026-09-03T07:52:34.781Z",
-      "runDateTimeDisplay": "09/03/2026, 12:52:34 AM PDT"
+      "bookedAppointments": 10,
+      "runDateTime": "2026-09-04T14:19:14.896Z",
+      "runDateTimeDisplay": "09/04/2026, 7:19:14 AM PDT"
     },
     {
       "clinic": "Bestmed Urgent Care, Kennewick",
-      "bookedAppointments": 16,
-      "runDateTime": "2026-09-03T07:52:34.781Z",
-      "runDateTimeDisplay": "09/03/2026, 12:52:34 AM PDT"
+      "bookedAppointments": 7,
+      "runDateTime": "2026-09-04T14:19:14.896Z",
+      "runDateTimeDisplay": "09/04/2026, 7:19:14 AM PDT"
     }
   ]
 }
