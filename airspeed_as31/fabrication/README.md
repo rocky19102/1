@@ -46,6 +46,63 @@ pip install ezdxf manifold3d trimesh numpy
 python3 make_parts.py
 ```
 
-The foam parts aren't included here. The plan's templates are laid out on 1000 × 500 mm Depron sheets, and the one-piece wing is about 710 mm across, which is wider than the P2's 600 × 308 mm bed.
+The foam parts are covered further down this README.
+
+---
+
+# Foam (Depron) parts: `laser/foam_p2/` and `laser/foam_fullsize/`
+
+These files come from `make_foam.py`, which reads the plan's cutting templates (`airspeed_parts.pdf`). That PDF has three 1000 × 500 mm sheets drawn 1:1.
+
+## Files for the xTool P2: `laser/foam_p2/`
+
+The parts are re-packed onto 600 × 300 mm foam blanks. The P2's bed is 600 × 308 mm. Parts sit at least 5 mm in from the blank's edges.
+
+| File | Foam | Parts |
+|---|---|---|
+| `p2_depron_6mm_sheet01` | 6 mm | KFM STEP 1/2, WING 2/3, STAB, REAR POINT, F10, F16 |
+| `p2_depron_6mm_sheet02` | 6 mm | WING 1/3, WING 3/3, F5, F6, F11, F12, E6, ELEVATOR 2 |
+| `p2_depron_6mm_sheet03` | 6 mm | F1–F4, KFM STEP 2/2, E1, E2, AILERON 1 and 2, ELEVATOR 1 |
+| `p2_depron_6mm_sheet04` | 6 mm | F7, F8, F13–F15, E3, E4, E5, E7, BOOM COVER 2, STAB CENTRE |
+| `p2_depron_6mm_sheet05` | 6 mm | F9, BOOM COVER 1, 3 and 4, BOOM SIDE 1–8 |
+| `p2_depron_3mm_sheet01` | 3 mm | CABIN SKIN 1 and 2 |
+
+Each sheet comes as both `.svg` and `.dxf`. `preview_6mm.png` and `preview_3mm.png` show every sheet at a glance.
+
+**The wing and the KFM step are split.** On the plan, both are one piece about 710 mm across, which is too big for the bed. The files cut them into pieces that lock together with dovetail tabs:
+- The wing is in 3 pieces, cut at 270 mm and 440 mm from the left edge of the plan sheet.
+- The KFM step is in 2 pieces, cut at 520 mm.
+
+The cut positions miss the servo pockets and the battery opening, and the wing and step joints are staggered so they don't line up. I checked that the pieces add back up to exactly the original shapes.
+- Lay the wing pieces flat on the plan and glue the dovetails with foam-safe CA or UHU Por. The carbon spars, the KFM step layer and the stacked fuselage layers all glue over the joints, which makes the wing strong again.
+
+### Colour layers
+
+| Colour | Layer | What to do with it |
+|---|---|---|
+| Red `#FF0000` | CUT | Cut all the way through. Holes come before outlines in the file, so pieces don't drop early. |
+| Blue `#0000FF` | SCORE | The centre axes from the plan. The fuselage layers F1–F16 line up on these when you stack them. Use a very light score or mark, not a cut. |
+| Black `#000000` | LABEL | Part names. Use a very low-power engrave or hide the layer. |
+
+### Laser settings for Depron (XPS foam)
+
+- **Start low and test.** XPS foam needs very little power on a 55 W CO2 laser. Cut a small test square first, starting at about **15% power and 150 mm/s** for 6 mm. Raise the power or lower the speed until it drops out cleanly. Use roughly half that power for 3 mm.
+- **Air assist on.** It keeps the edges from melting and beading.
+- **Ventilation is required.** Cutting polystyrene gives off styrene fumes, so keep the P2's exhaust connected and vented outdoors.
+- **Kerf:** the cut lines are on the drawn line, so expect about 0.3 mm kerf. That leaves cross-lap slots such as E2/E6 slightly loose, which is fine with glue.
+- Only cut Depron or another plain polystyrene foam. Never cut PVC foam board (Foamex/Sintra), because it gives off chlorine gas.
+
+## Full-size sheets: `laser/foam_fullsize/`
+
+These are the plan's original three sheets at 1000 × 500 mm, cleaned up with the same three layers. They're for a laser with a bigger bed, or for printing as paper templates.
+
+## Changing the sheet size
+
+If your foam comes in a different size, edit `SHEET_W`, `SHEET_H` or `MARGIN` at the top of `make_foam.py` and run it again. You can also change `SPLITS` to move the wing joints.
+
+```
+pip install pymupdf shapely numpy scipy pillow matplotlib ezdxf
+python3 make_foam.py
+```
 
 Source plan © Laurent Berlivet / jivaro-models.org.
