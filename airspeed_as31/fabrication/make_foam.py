@@ -38,11 +38,20 @@ from shapely.ops import polygonize, polylabel, unary_union
 HERE = Path(__file__).parent
 PDF = HERE.parent / "airspeed_parts.pdf"
 OUT_FULL = HERE / "laser" / "foam_fullsize"
-OUT_P2 = HERE / "laser" / "foam_p2"
 PT = 25.4 / 72
 
-# P2 sheet: 600 x 300 mm foam blank, 5 mm clear margin all round
-SHEET_W, SHEET_H, MARGIN, GAP = 600, 300, 5, 3
+# Foam profiles for the xTool P2 (bed 600 x 308 mm). Each part stays at
+# least MARGIN mm from the blank's edges, GAP mm between parts.
+#   t: main foam thickness (slots are re-fitted to it)
+#   w, h: blank size in mm
+PROFILES = [
+    # 6 mm Depron, 600 x 300 blanks: as drawn on the plan
+    dict(dir="foam_p2", tag="depron_6mm", t=6.0, w=600, h=300),
+    # Dollar Tree foam board, 5 mm, 20 x 30 in (508 x 762 mm): cut each
+    # board into two 508 x 300 blanks (leaves a 508 x 162 offcut)
+    dict(dir="foam_p2_dollartree_5mm", tag="dollartree_5mm", t=5.0, w=508, h=300),
+]
+MARGIN, GAP = 5, 3
 
 # where to split the over-size parts (x in sheet-1 page coordinates, mm).
 # Chosen to miss servo pockets and the battery opening, and staggered
@@ -208,6 +217,47 @@ def apply_splits(parts):
     return out
 
 
+
+# --------------------------------------------------------------------------
+# re-fit slots for a different foam thickness
+# --------------------------------------------------------------------------
+PLAN_T = 6.0   # the plan's cross-lap slots are exactly 6.00 mm wide
+
+
+def refit_slots(part, t):
+    """Narrow every plan-thickness slot that opens to the outside edge to
+    width t. Slots inside holes (servo pocket tabs) are left alone."""
+    if t >= PLAN_T - 0.01:
+        return part, 0
+    f = part["poly"]
+    outer = Polygon(f.exterior)
+    closed = outer.buffer(3.6, join_style=2).buffer(-3.6, join_style=2)
+    gaps = closed.difference(outer)
+    add, n = [], 0
+    for g in getattr(gaps, "geoms", [gaps]):
+        if g.area < 5:
+            continue
+        r = g.minimum_rotated_rectangle
+        c = list(r.exterior.coords)
+        edges = [(c[i], c[i + 1]) for i in range(2)]
+        lens = [np.hypot(b[0] - a[0], b[1] - a[1]) for a, b in edges]
+        w, L = min(lens), max(lens)
+        if not (PLAN_T - 0.3 < w < PLAN_T + 0.3 and L > 6):
+            continue
+        a, b = edges[int(np.argmax(lens))]
+        ang = np.degrees(np.arctan2(b[1] - a[1], b[0] - a[0]))
+        o = r.centroid
+        narrow = affinity.rotate(affinity.scale(affinity.rotate(r, -ang, origin=o),
+                                                1, t / w, origin=o), ang, origin=o)
+        add.append(r.difference(narrow).intersection(f.buffer(0.6)))
+        n += 1
+    if not add:
+        return part, 0
+    g = unary_union([f] + add).buffer(0)
+    if isinstance(g, MultiPolygon):
+        g = max(g.geoms, key=lambda q: q.area)
+    return {**part, "poly": g}, n
+
 # --------------------------------------------------------------------------
 # labels
 # --------------------------------------------------------------------------
@@ -232,7 +282,7 @@ def make_label(part):
     r = f.exterior.distance(c)
     for hole in f.interiors:
         r = min(r, hole.distance(c))
-    text = part["name"] + ("" if part["t"] == 6 else " 3mm")
+    text = part["name"] + (" 3mm" if part["t"] == 3 else "")
     for size in (8, 6, 5, 4, 3, 2.5):
         t = text_poly(text, size)
         if rot:
@@ -412,7 +462,6 @@ def nest(parts, W, H):
 # --------------------------------------------------------------------------
 def main():
     OUT_FULL.mkdir(parents=True, exist_ok=True)
-    OUT_P2.mkdir(parents=True, exist_ok=True)
     doc = pymupdf.open(PDF)
 
     p1 = parts_from_page(doc[0], 6)
@@ -442,25 +491,39 @@ def main():
     sh3 = [xform(p, lambda g: affinity.translate(g, -749.2, 0)) for p in right]
     write_sheet(sh3, 251, 500, OUT_FULL / "sheet3_depron_3mm", "Airspeed AS31 sheet 3, Depron 3 mm")
 
-    # P2 sheets
-    six = apply_splits(p1) + left
-    for t, group in ((6, six), (3, right)):
-        sheets = nest(group, SHEET_W, SHEET_H)
+    # laser-bed sheets, one set per foam profile
+    for prof in PROFILES:
+        build_profile(prof, apply_splits(p1) + left, right)
+
+
+def build_profile(prof, six, three):
+    out = HERE / "laser" / prof["dir"]
+    out.mkdir(parents=True, exist_ok=True)
+    W, H, T = prof["w"], prof["h"], prof["t"]
+    fixed = 0
+    main = []
+    for p in six:
+        q, n = refit_slots(p, T)
+        fixed += n
+        main.append({**q, "t": T})
+    if fixed:
+        print(f"[{prof['dir']}] narrowed {fixed} slots from {PLAN_T} to {T} mm")
+    for t, group, tag in ((T, main, prof["tag"]), (3, three, "cabin_skin_3mm")):
+        sheets = nest(group, W, H)
         for parts in sheets:  # sanity: inside the sheet margin, no overlaps
             for i, a in enumerate(parts):
                 x0, y0, x1, y1 = a["poly"].bounds
                 assert x0 >= MARGIN - 0.5 and y0 >= MARGIN - 0.5
-                assert x1 <= SHEET_W - MARGIN + 0.5 and y1 <= SHEET_H - MARGIN + 0.5, (a["name"], a["poly"].bounds)
+                assert x1 <= W - MARGIN + 0.5 and y1 <= H - MARGIN + 0.5, (a["name"], a["poly"].bounds)
                 for b in parts[i + 1:]:
                     assert a["poly"].distance(b["poly"]) >= 1.0, (a["name"], b["name"])
         # label after nesting so text is always upright on the sheet
         sheets = [[{**p, "label": make_label(p)} for p in parts] for parts in sheets]
         for i, parts in enumerate(sheets, 1):
-            stem = OUT_P2 / f"p2_depron_{t}mm_sheet{i:02d}"
-            write_sheet(parts, SHEET_W, SHEET_H, stem,
-                        f"Airspeed AS31 P2 {t} mm sheet {i}/{len(sheets)}")
-        preview(sheets, OUT_P2 / f"preview_{t}mm.png", SHEET_W, SHEET_H)
-        print(f"{t} mm: {len(group)} parts on {len(sheets)} sheets of {SHEET_W}x{SHEET_H}")
+            write_sheet(parts, W, H, out / f"{tag}_sheet{i:02d}",
+                        f"Airspeed AS31 {tag} sheet {i}/{len(sheets)} ({W}x{H} mm)")
+        preview(sheets, out / f"preview_{tag}.png", W, H)
+        print(f"[{prof['dir']}] {tag}: {len(group)} parts on {len(sheets)} sheets of {W}x{H}")
         for i, parts in enumerate(sheets, 1):
             print(f"  sheet {i}: " + ", ".join(p["name"] for p in parts))
 
